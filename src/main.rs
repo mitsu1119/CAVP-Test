@@ -1,3 +1,8 @@
+use cavp_test::CavpTest;
+
+mod cavp_test;
+
 fn main() {
-    println!("Hello, world!");
+    let test = CavpTest::new("test_dir");
+    println!("{:?}", test);
 }
