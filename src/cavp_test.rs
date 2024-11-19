@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    io,
+    io::{self, BufRead},
     path::Path,
 };
 
@@ -12,6 +12,19 @@ type Result<T> = std::result::Result<T, CavpError>;
 
 pub enum TestKind {
     SHA,
+}
+
+#[derive(Debug)]
+struct ShaTriData {
+    bit_len: u32,
+    msg: String,
+    md: String,
+}
+
+impl ShaTriData {
+    fn new(bit_len: u32, msg: String, md: String) -> Self {
+        Self { bit_len, msg, md }
+    }
 }
 
 #[derive(Debug)]
@@ -37,12 +50,14 @@ impl<'a> CavpTest<'a> {
             TestKind::SHA => {
                 let response = reqwest::get(Self::SHA_BYTE_URL).await?;
                 let bytes = response.bytes().await?;
-                let mut out = File::create(self.test_root.join(Path::new("sha1byte.zip")))?;
+                let mut out =
+                    File::create(self.test_root.join(Path::new("shabytetestvectors.zip")))?;
                 io::copy(&mut bytes.as_ref(), &mut out)?;
 
-                let mut archive =
-                    ZipArchive::new(File::open(self.test_root.join(Path::new("sha1byte.zip")))?)
-                        .unwrap();
+                let mut archive = ZipArchive::new(File::open(
+                    self.test_root.join(Path::new("shabytetestvectors.zip")),
+                )?)
+                .unwrap();
                 for i in 0..archive.len() {
                     let mut f = archive.by_index(i).unwrap();
                     let name = f.name().to_string();
@@ -59,6 +74,42 @@ impl<'a> CavpTest<'a> {
 
     pub fn clean(&self) -> Result<()> {
         fs::remove_dir_all(self.test_root)?;
+        Ok(())
+    }
+
+    fn tri_parse(&self, file_name: &Path) -> Result<Vec<ShaTriData>> {
+        let mut res = vec![];
+
+        let file = std::fs::File::open(self.test_root.join(file_name))?;
+
+        let mut len = 0;
+        let mut msg = "".to_string();
+        let mut md = "".to_string();
+        for line in std::io::BufReader::new(file).lines() {
+            if let Ok(data) = line {
+                let datas = data.split(" ").collect::<Vec<&str>>();
+                if let Some(prefix) = datas.first() {
+                    if *prefix == "Len" {
+                        len = datas[2].parse().unwrap();
+                    }
+                    if *prefix == "Msg" {
+                        msg = datas[2].to_string();
+                    }
+                    if *prefix == "MD" {
+                        md = datas[2].to_string();
+                        res.push(ShaTriData::new(len, msg.clone(), md.clone()));
+                    }
+                }
+            }
+        }
+
+        println!("res: {:?}", res);
+
+        Ok(res)
+    }
+
+    pub fn sha1(&self) -> Result<()> {
+        self.tri_parse(Path::new("shabytetestvectors/SHA1ShortMsg.rsp"))?;
         Ok(())
     }
 }

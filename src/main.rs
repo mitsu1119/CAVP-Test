@@ -8,7 +8,8 @@ mod error;
 async fn main() -> Result<(), CavpError> {
     let test = CavpTest::new("test_dir")?;
     test.download(cavp_test::TestKind::SHA).await?;
-    test.clean()?;
+
+    test.sha1()?;
 
     Ok(())
 }
