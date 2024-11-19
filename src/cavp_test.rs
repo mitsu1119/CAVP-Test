@@ -15,15 +15,23 @@ pub enum TestKind {
 }
 
 #[derive(Debug)]
-struct ShaTriData {
-    bit_len: u32,
-    msg: String,
+pub struct ShaTriData {
+    pub bit_len: u32,
+    pub msg: String,
     md: String,
 }
 
 impl ShaTriData {
     fn new(bit_len: u32, msg: String, md: String) -> Self {
         Self { bit_len, msg, md }
+    }
+
+    pub fn test(&self, md: String) -> Result<()> {
+        if md == self.md {
+            Ok(())
+        } else {
+            Err(CavpError::TestFailed(self.msg.clone()))
+        }
     }
 }
 
@@ -103,13 +111,17 @@ impl<'a> CavpTest<'a> {
             }
         }
 
-        println!("res: {:?}", res);
-
         Ok(res)
     }
 
-    pub fn sha1(&self) -> Result<()> {
-        self.tri_parse(Path::new("shabytetestvectors/SHA1ShortMsg.rsp"))?;
-        Ok(())
+    pub fn sha1_byte_testvectors(&self) -> Result<Vec<ShaTriData>> {
+        let sha_root = Path::new("shabytetestvectors");
+
+        let mut short_msgs = self.tri_parse(&sha_root.join(Path::new("SHA1ShortMsg.rsp")))?;
+        let long_msgs = self.tri_parse(&sha_root.join(Path::new("SHA1LongMsg.rsp")))?;
+
+        short_msgs.extend(long_msgs);
+
+        Ok(short_msgs)
     }
 }

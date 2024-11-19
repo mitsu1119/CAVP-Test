@@ -4,6 +4,7 @@ use std::io;
 pub enum CavpError {
     IoError(io::Error),
     ReqwestError(reqwest::Error),
+    TestFailed(String),
 }
 
 impl From<io::Error> for CavpError {
