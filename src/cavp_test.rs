@@ -56,6 +56,9 @@ impl<'a> CavpTest<'a> {
     pub async fn download(&self, test_kind: TestKind) -> Result<()> {
         match test_kind {
             TestKind::SHA => {
+                if Path::new("shabytetestvectors.zip").exists() {
+                    return Ok(());
+                }
                 let response = reqwest::get(Self::SHA_BYTE_URL).await?;
                 let bytes = response.bytes().await?;
                 let mut out =
