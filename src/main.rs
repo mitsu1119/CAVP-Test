@@ -12,8 +12,8 @@ async fn main() -> Result<(), CavpError> {
     let test = CavpTest::new("test_dir")?;
     test.download(cavp_test::TestKind::SHA).await?;
 
-    println!("SHA-1 byte test");
-    for t in test.sha1_byte_testvectors()? {
+    println!("SHA-256 byte test");
+    for t in test.sha256_byte_testvectors()? {
         println!("Msg: {}", t.msg);
 
         let mut md = String::new();
