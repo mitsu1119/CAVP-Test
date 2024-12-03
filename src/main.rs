@@ -5,6 +5,7 @@ use error::CavpError;
 
 mod cavp_test;
 mod error;
+mod sha_data;
 
 #[tokio::main]
 async fn main() -> Result<(), CavpError> {
