@@ -56,19 +56,16 @@ impl<'a> CavpTest<'a> {
     pub async fn download(&self, test_kind: TestKind) -> Result<()> {
         match test_kind {
             TestKind::SHA => {
-                if Path::new("shabytetestvectors.zip").exists() {
+                let zip_path = self.test_root.join(Path::new("shabytetestvectors.zip"));
+                if zip_path.exists() {
                     return Ok(());
                 }
                 let response = reqwest::get(Self::SHA_BYTE_URL).await?;
                 let bytes = response.bytes().await?;
-                let mut out =
-                    File::create(self.test_root.join(Path::new("shabytetestvectors.zip")))?;
+                let mut out = File::create(zip_path.clone())?;
                 io::copy(&mut bytes.as_ref(), &mut out)?;
 
-                let mut archive = ZipArchive::new(File::open(
-                    self.test_root.join(Path::new("shabytetestvectors.zip")),
-                )?)
-                .unwrap();
+                let mut archive = ZipArchive::new(File::open(zip_path)?).unwrap();
                 for i in 0..archive.len() {
                     let mut f = archive.by_index(i).unwrap();
                     let name = f.name().to_string();
@@ -95,7 +92,6 @@ impl<'a> CavpTest<'a> {
 
         let mut len = 0;
         let mut msg = "".to_string();
-        let mut md = "".to_string();
         for line in std::io::BufReader::new(file).lines() {
             if let Ok(data) = line {
                 let datas = data.split(" ").collect::<Vec<&str>>();
@@ -107,8 +103,7 @@ impl<'a> CavpTest<'a> {
                         msg = datas[2].to_string();
                     }
                     if *prefix == "MD" {
-                        md = datas[2].to_string();
-                        res.push(ShaTriData::new(len, msg.clone(), md.clone()));
+                        res.push(ShaTriData::new(len, msg.clone(), datas[2].to_string()));
                     }
                 }
             }
