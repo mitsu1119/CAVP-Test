@@ -102,6 +102,17 @@ impl<'a> CavpTest<'a> {
         Ok(short_msgs)
     }
 
+    pub fn sha224_byte_testvectors(&self) -> Result<Vec<ShaTriData>> {
+        let sha_root = Path::new("shabytetestvectors");
+
+        let mut short_msgs = self.tri_parse(&sha_root.join("SHA224ShortMsg.rsp"))?;
+        let long_msgs = self.tri_parse(&sha_root.join("SHA224LongMsg.rsp"))?;
+
+        short_msgs.extend(long_msgs);
+
+        Ok(short_msgs)
+    }
+
     pub fn sha256_byte_testvectors(&self) -> Result<Vec<ShaTriData>> {
         let sha_root = Path::new("shabytetestvectors");
 
